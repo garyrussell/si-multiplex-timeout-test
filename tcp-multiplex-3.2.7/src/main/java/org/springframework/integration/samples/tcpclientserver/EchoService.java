@@ -15,6 +15,8 @@
  */
 package org.springframework.integration.samples.tcpclientserver;
 
+import org.springframework.integration.MessageTimeoutException;
+
 /**
  * Simple service that receives data in a byte array,
  * converts it to a String and appends it with ':echo'.
@@ -29,12 +31,16 @@ public class EchoService {
 		if ("FAIL".equals(input)) {
 			throw new RuntimeException("Failure Demonstration");
 		}
-		
+
 		if("TIMEOUT_TEST".equals(input)){
-			Thread.sleep(15000);		
+			Thread.sleep(15000);
 		}
-		
+
 		return input + ":echo";
+	}
+
+	public MessageTimeoutException noResponse(String input) {
+		return new MessageTimeoutException("No response received for " + input);
 	}
 
 }

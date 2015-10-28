@@ -15,11 +15,14 @@
  */
 package org.springframework.integration.samples.tcpclientserver;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.MessageTimeoutException;
 import org.springframework.integration.ip.tcp.connection.AbstractServerConnectionFactory;
@@ -62,11 +65,15 @@ public class TcpClientServerDemoTimeoutTest {
 		String result = gw.send("999Hello world!"); // first 3 bytes is correlationid
 		assertEquals("999Hello world!:echo", result);
 	}
-	
-	@Test(expected = MessageTimeoutException.class)
+
+	@Test
 	public void testTimeout() {
-		String result = gw.send("TIMEOUT_TEST"); // first 3 bytes is correlationid
-		System.out.println(result);
+		try {
+			gw.send("TIMEOUT_TEST"); // first 3 bytes is correlationid
+		}
+		catch (MessageTimeoutException e) {
+			assertThat(e.getMessage(), containsString("No response received for TIMEOUT_TEST"));
+		}
 	}
 
 

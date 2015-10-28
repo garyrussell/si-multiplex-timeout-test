@@ -40,6 +40,7 @@
 
 	<gateway id="gw"
         service-interface="org.springframework.integration.samples.tcpclientserver.SimpleGateway"
+        default-reply-timeout="20000"
         default-request-channel="input" />
 
 	<ip:tcp-connection-factory id="client"
@@ -75,8 +76,26 @@
 
 	<aggregator input-channel="toAggregator.client"
 		output-channel="toTransformer.client"
+		message-store="messageStore"
+		expire-groups-upon-completion="true"
 		correlation-strategy-expression="payload.substring(0,3)"
+		discard-channel="noResponseChannel"
 		release-strategy-expression="size() == 2" />
+
+	<channel id="noResponseChannel" />
+
+	<service-activator input-channel="noResponseChannel" ref="echoService" method="noResponse" />
+
+	<beans:bean id="messageStore" class="org.springframework.integration.store.SimpleMessageStore" />
+
+	<beans:bean id="reaper" class="org.springframework.integration.store.MessageGroupStoreReaper">
+		<beans:constructor-arg ref="messageStore" />
+		<beans:property name="timeout" value="10000" />
+	</beans:bean>
+
+	<task:scheduled-tasks scheduler="taskScheduler">
+		<task:scheduled ref="reaper" method="run" fixed-rate="3000" />
+	</task:scheduled-tasks>
 
 	<transformer input-channel="toTransformer.client"
 		expression="payload.get(1)"/> <!-- The response is always second -->
